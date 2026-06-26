@@ -1,9 +1,13 @@
 import {
   Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf,
-  MarkdownView, debounce, addIcon,
+  MarkdownView, debounce, addIcon, Notice,
 } from "obsidian";
 import { ViewPlugin, Decoration, DecorationSet, EditorView, ViewUpdate } from "@codemirror/view";
-import { Range } from "@codemirror/state";
+import { Range, StateEffect } from "@codemirror/state";
+
+// Dispatched to every editor when settings change, so the decorations rebuild
+// immediately (toggling no longer depends on CSS alone).
+const refreshEffect = StateEffect.define<void>();
 import { syntaxTree } from "@codemirror/language";
 // Shared, framework-agnostic engine (same file the web app uses).
 import { analyze, LEGEND, gradeLabel, MARK } from "../../core/plainsong.js";
@@ -29,7 +33,7 @@ interface PlainsongSettings {
 }
 
 const DEFAULT_SETTINGS: PlainsongSettings = {
-  enabled: true,
+  enabled: false, // load quiet; user opts in via the ribbon, command, or settings
   style: "underline",
   show: { veryHard: true, hard: true, passive: true, adverb: true, qualifier: true, complex: true },
 };
@@ -63,11 +67,20 @@ export default class PlainsongPlugin extends Plugin {
     this.registerView(VIEW_TYPE, (leaf) => new PlainsongView(leaf, this));
     this.addSettingTab(new PlainsongSettingTab(this.app, this));
 
-    this.addRibbonIcon(ICON_ID, "Plainsong panel", () => this.activatePanel());
     this.addCommand({ id: "open-panel", name: "Open readability panel", callback: () => this.activatePanel() });
     this.addCommand({
-      id: "toggle-highlights", name: "Toggle highlights",
-      callback: async () => { this.settings.enabled = !this.settings.enabled; await this.saveSettings(); },
+      id: "toggle-highlights", name: "Toggle highlights on/off",
+      callback: async () => {
+        this.settings.enabled = !this.settings.enabled;
+        await this.saveSettings();
+        new Notice(`Plainsong highlights ${this.settings.enabled ? "on" : "off"}`);
+      },
+    });
+    // A one-click ribbon toggle so it's always reachable.
+    this.addRibbonIcon(ICON_ID, "Toggle Plainsong highlights", async () => {
+      this.settings.enabled = !this.settings.enabled;
+      await this.saveSettings();
+      new Notice(`Plainsong highlights ${this.settings.enabled ? "on" : "off"}`);
     });
 
     // Refresh the panel/status when the user switches notes.
@@ -82,9 +95,9 @@ export default class PlainsongPlugin extends Plugin {
     ]);
   }
 
-  // The CM6 extension: always emit every mark as a classed span. Visibility and
-  // style are driven by body classes (see applyBodyClasses), so toggling a
-  // setting is an instant CSS change with no editor rebuild.
+  // The CM6 extension. When highlights are disabled (or a category is hidden) we
+  // emit no decorations at all, so "off" is genuinely off, not just CSS-hidden.
+  // A refreshEffect dispatched on settings change forces an immediate rebuild.
   buildExtension() {
     const plugin = this;
     return ViewPlugin.fromClass(
@@ -92,17 +105,20 @@ export default class PlainsongPlugin extends Plugin {
         decorations: DecorationSet;
         constructor(view: EditorView) { this.decorations = this.build(view); }
         update(u: ViewUpdate) {
-          if (u.docChanged || u.viewportChanged) {
+          const refreshed = u.transactions.some((tr) => tr.effects.some((e) => e.is(refreshEffect)));
+          if (u.docChanged || u.viewportChanged || refreshed) {
             this.decorations = this.build(u.view);
             plugin.pushStats(u.view);
           }
         }
         build(view: EditorView): DecorationSet {
+          if (!plugin.settings.enabled) return Decoration.none;
           const text = view.state.doc.toString();
           const { marks } = analyze(text);
           const ranges: Range<Decoration>[] = [];
           for (const m of marks) {
             if (m.from >= m.to) continue;
+            if (!plugin.settings.show[m.type as Category]) continue;
             if (inExcludedNode(view, m.from)) continue;
             const attrs: Record<string, string> = {};
             if (m.suggestion) attrs["aria-label"] = `Try: ${m.suggestion}`;
@@ -118,6 +134,14 @@ export default class PlainsongPlugin extends Plugin {
       },
       { decorations: (v) => v.decorations }
     );
+  }
+
+  // Force every open editor to rebuild its decorations now.
+  refreshEditors() {
+    for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
+      const cm = (leaf.view as any)?.editor?.cm as EditorView | undefined;
+      cm?.dispatch({ effects: refreshEffect.of() });
+    }
   }
 
   pushStats = debounce((view: EditorView) => {
@@ -167,6 +191,7 @@ export default class PlainsongPlugin extends Plugin {
   async saveSettings() {
     await this.saveData(this.settings);
     this.applyBodyClasses();
+    this.refreshEditors();
   }
 }
 

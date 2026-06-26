@@ -62,10 +62,15 @@ npm run build                    # emits obsidian/main.js
 ```
 
 Live in-editor highlighting via CM6 decorations, a readability side panel
-(ribbon icon / "Open readability panel" command), and a status-bar grade.
-Category visibility and underline-vs-background style are pure CSS toggles, so
-changing a setting is instant with no re-analysis. Code blocks, inline code, and
-YAML frontmatter are skipped.
+("Open readability panel" command), and a status-bar grade. Code blocks, inline
+code, and YAML frontmatter are skipped.
+
+Highlighting is **off by default** — it's a pass you opt into. Turn it on with
+the ribbon icon (pencil-lines glyph) or the "Toggle highlights on/off" command;
+the choice persists. When off, the plugin emits no decorations at all. The
+default sentence treatment is a colored underline; switch to "Background" in
+settings for the classic Hemingway block-fill look. Categories can be toggled
+individually.
 
 ## Credit
 
