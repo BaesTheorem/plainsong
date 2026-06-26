@@ -151,32 +151,20 @@ export default class PlainsongPlugin extends Plugin {
   }
 
   showSuggestMenu(mark: any, e: MouseEvent, view: EditorView) {
-    const a = advise(mark);
+    const a = (advise as any)(mark, view.state.doc.toString());
     const menu = new Menu();
     menu.addItem((i) => i.setTitle(a.heading).setIsLabel(true));
     menu.addItem((i) => i.setTitle(a.message).setIsLabel(true));
 
-    if (a.replacements.length || a.canRemove) menu.addSeparator();
-
-    for (const r of a.replacements) {
+    if (a.fixes.length) menu.addSeparator();
+    for (const f of a.fixes) {
+      const icon = f.insert === "" ? "trash" : "check";
       menu.addItem((i) =>
-        i.setTitle(`Replace with “${r}”`).setIcon("check").onClick(() => {
+        i.setTitle(f.label).setIcon(icon).onClick(() => {
           view.dispatch({
-            changes: { from: mark.from, to: mark.to, insert: r },
-            selection: { anchor: mark.from + r.length },
+            changes: { from: f.from, to: f.to, insert: f.insert },
+            selection: { anchor: f.from + f.insert.length },
           });
-        })
-      );
-    }
-
-    if (a.canRemove) {
-      menu.addItem((i) =>
-        i.setTitle("Remove it").setIcon("trash").onClick(() => {
-          let from = mark.from, to = mark.to;
-          const doc = view.state.doc;
-          if (doc.sliceString(to, to + 1) === " ") to += 1;
-          else if (doc.sliceString(from - 1, from) === " ") from -= 1;
-          view.dispatch({ changes: { from, to, insert: "" }, selection: { anchor: from } });
         })
       );
     }
