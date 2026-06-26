@@ -35,6 +35,22 @@ body.plainsong-on.plainsong-style-background .plainsong-complex   { background: 
 
 /* ---- panel ---- */
 .plainsong-panel { padding: 14px 16px; }
+.plainsong-panel .ps-toggle {
+  width: 100%;
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 0;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  cursor: pointer;
+  text-align: left;
+}
+.plainsong-panel .ps-toggle.is-on { box-shadow: inset 4px 0 0 var(--text-accent); }
+.plainsong-panel .ps-toggle.is-off { color: var(--text-muted); }
+.plainsong-panel .ps-toggle:hover { background: var(--background-modifier-hover); }
 .plainsong-panel .ps-grade { border-bottom: 1px solid var(--background-modifier-border); padding-bottom: 12px; margin-bottom: 14px; }
 .plainsong-panel .ps-grade-num { font-size: 40px; font-weight: 700; line-height: 1; }
 .plainsong-panel .ps-grade-label { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
