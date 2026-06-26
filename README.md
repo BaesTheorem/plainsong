@@ -34,6 +34,19 @@ front end re-implements any analysis.
 - `stats` — words, sentences, reading time, document grade, Flesch-Kincaid, and
   per-category counts.
 
+`advise(mark)` returns the click-to-fix payload: `{ heading, color, message,
+replacements, canRemove }` — the issue explained in plain language plus the
+concrete fixes. `applyFix(text, mark, kind, value)` returns the edited string and
+new caret position. Both front ends use these so the suggestions are identical.
+
+## Click to fix
+
+Click any highlight and a small card explains the issue and offers one-click
+fixes: pick a simpler word for a complex term, "remove it" for an adverb or
+qualifier, or read split/rewrite guidance for a hard sentence or passive voice.
+Choosing a fix edits the text immediately. (Web: a popover; Obsidian: a context
+menu.)
+
 Sentence difficulty is ARI: `grade = 4.71·(chars/word) + 0.5·(words/sentence) − 21.43`.
 A sentence must run **14+ words** before it can be flagged (the length gate the
 original uses, which people often miss).

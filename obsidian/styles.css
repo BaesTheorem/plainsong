@@ -2,6 +2,7 @@
    All highlight visibility is gated on body.plainsong-on so toggling is instant. */
 
 .plainsong-mark { transition: none; }
+body.plainsong-on .plainsong-mark { cursor: pointer; }
 
 /* hidden unless the plugin is enabled */
 body:not(.plainsong-on) .plainsong-mark { background: none !important; box-shadow: none !important; }

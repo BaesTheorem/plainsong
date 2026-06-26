@@ -1,6 +1,6 @@
 import {
   Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf,
-  MarkdownView, debounce, addIcon, Notice,
+  MarkdownView, debounce, addIcon, Notice, Menu,
 } from "obsidian";
 import { ViewPlugin, Decoration, DecorationSet, EditorView, ViewUpdate } from "@codemirror/view";
 import { Range, StateEffect } from "@codemirror/state";
@@ -10,7 +10,7 @@ import { Range, StateEffect } from "@codemirror/state";
 const refreshEffect = StateEffect.define<void>();
 import { syntaxTree } from "@codemirror/language";
 // Shared, framework-agnostic engine (same file the web app uses).
-import { analyze, LEGEND, gradeLabel, MARK } from "../../core/plainsong.js";
+import { analyze, LEGEND, gradeLabel, MARK, advise } from "../../core/plainsong.js";
 
 const VIEW_TYPE = "plainsong-panel";
 const ICON_ID = "plainsong";
@@ -93,7 +93,7 @@ export default class PlainsongPlugin extends Plugin {
   // A refreshEffect dispatched on settings change forces an immediate rebuild.
   buildExtension() {
     const plugin = this;
-    return ViewPlugin.fromClass(
+    const viewPlugin = ViewPlugin.fromClass(
       class {
         decorations: DecorationSet;
         constructor(view: EditorView) { this.decorations = this.build(view); }
@@ -107,7 +107,7 @@ export default class PlainsongPlugin extends Plugin {
         build(view: EditorView): DecorationSet {
           if (!plugin.settings.enabled) return Decoration.none;
           const text = view.state.doc.toString();
-          const { marks } = analyze(text);
+          const { marks } = analyze(text) as { marks: any[] };
           const ranges: Range<Decoration>[] = [];
           for (const m of marks) {
             if (m.from >= m.to) continue;
@@ -127,6 +127,61 @@ export default class PlainsongPlugin extends Plugin {
       },
       { decorations: (v) => v.decorations }
     );
+
+    // Click a highlight -> a menu explaining the issue with one-click fixes.
+    const clickHandler = EditorView.domEventHandlers({
+      click: (e, view) => plugin.handleClick(e as MouseEvent, view),
+    });
+
+    return [viewPlugin, clickHandler];
+  }
+
+  // Find the most specific highlighted mark under the click and open a fix menu.
+  handleClick(e: MouseEvent, view: EditorView): boolean {
+    if (!this.settings.enabled) return false;
+    const pos = view.posAtCoords({ x: e.clientX, y: e.clientY });
+    if (pos == null) return false;
+    const { marks } = analyze(view.state.doc.toString()) as { marks: any[] };
+    const hit = marks
+      .filter((m) => pos >= m.from && pos <= m.to && this.settings.show[m.type as Category])
+      .sort((a, b) => (a.to - a.from) - (b.to - b.from))[0];
+    if (!hit || inExcludedNode(view, hit.from)) return false;
+    this.showSuggestMenu(hit, e, view);
+    return false; // let the normal click place the caret too
+  }
+
+  showSuggestMenu(mark: any, e: MouseEvent, view: EditorView) {
+    const a = advise(mark);
+    const menu = new Menu();
+    menu.addItem((i) => i.setTitle(a.heading).setIsLabel(true));
+    menu.addItem((i) => i.setTitle(a.message).setIsLabel(true));
+
+    if (a.replacements.length || a.canRemove) menu.addSeparator();
+
+    for (const r of a.replacements) {
+      menu.addItem((i) =>
+        i.setTitle(`Replace with “${r}”`).setIcon("check").onClick(() => {
+          view.dispatch({
+            changes: { from: mark.from, to: mark.to, insert: r },
+            selection: { anchor: mark.from + r.length },
+          });
+        })
+      );
+    }
+
+    if (a.canRemove) {
+      menu.addItem((i) =>
+        i.setTitle("Remove it").setIcon("trash").onClick(() => {
+          let from = mark.from, to = mark.to;
+          const doc = view.state.doc;
+          if (doc.sliceString(to, to + 1) === " ") to += 1;
+          else if (doc.sliceString(from - 1, from) === " ") from -= 1;
+          view.dispatch({ changes: { from, to, insert: "" }, selection: { anchor: from } });
+        })
+      );
+    }
+
+    menu.showAtMouseEvent(e);
   }
 
   // Force every open editor to rebuild its decorations now.

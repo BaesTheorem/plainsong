@@ -1,8 +1,10 @@
-import { analyze, LEGEND, gradeLabel } from "../core/plainsong.js";
+import { analyze, LEGEND, gradeLabel, advise, applyFix } from "../core/plainsong.js";
 
 const input = document.getElementById("input");
 const backdrop = document.getElementById("backdrop");
 const legendEl = document.getElementById("legend");
+
+let currentMarks = [];
 
 const SAMPLE = `Hemingway was a writer who used short sentences. This tool was built to help you do the same.
 
@@ -68,6 +70,7 @@ function fmtTime(sec) {
 function run() {
   const text = input.value;
   const { marks, stats } = analyze(text);
+  currentMarks = marks;
   render(text, marks);
 
   document.getElementById("grade-num").textContent = stats.grade > 0 ? stats.grade : "—";
@@ -107,6 +110,94 @@ document.getElementById("toggle").addEventListener("click", (e) => {
   e.target.setAttribute("aria-pressed", String(!off));
   e.target.textContent = `Highlights: ${off ? "off" : "on"}`;
 });
+
+// ---- click-to-suggest popover ----
+const pop = document.createElement("div");
+pop.className = "ps-popover";
+pop.hidden = true;
+document.body.appendChild(pop);
+
+function closePop() { pop.hidden = true; }
+
+function applyAndClose(mark, kind, value) {
+  const { text, caret } = applyFix(input.value, mark, kind, value);
+  input.value = text;
+  run();
+  closePop();
+  input.focus();
+  input.setSelectionRange(caret, caret);
+}
+
+function openPop(mark, x, y) {
+  const a = advise(mark);
+  pop.replaceChildren();
+
+  const head = document.createElement("div");
+  head.className = "ps-pop-head";
+  const dot = document.createElement("span");
+  dot.className = "ps-pop-dot";
+  dot.style.background = a.color;
+  const title = document.createElement("span");
+  title.textContent = a.heading;
+  head.append(dot, title);
+  pop.append(head);
+
+  const msg = document.createElement("div");
+  msg.className = "ps-pop-msg";
+  msg.textContent = a.message;
+  pop.append(msg);
+
+  if (a.replacements.length) {
+    const label = document.createElement("div");
+    label.className = "ps-pop-label";
+    label.textContent = "Replace with";
+    pop.append(label);
+    const reps = document.createElement("div");
+    reps.className = "ps-pop-reps";
+    for (const r of a.replacements) {
+      const b = document.createElement("button");
+      b.className = "ps-pop-rep";
+      b.textContent = r;
+      b.onclick = () => applyAndClose(mark, "replace", r);
+      reps.append(b);
+    }
+    pop.append(reps);
+  }
+
+  if (a.canRemove) {
+    const b = document.createElement("button");
+    b.className = "ps-pop-remove";
+    b.textContent = "Remove it";
+    b.onclick = () => applyAndClose(mark, "remove");
+    pop.append(b);
+  }
+
+  pop.hidden = false;
+  const pw = pop.offsetWidth, ph = pop.offsetHeight;
+  let px = x, py = y + 16;
+  if (px + pw > window.innerWidth - 12) px = window.innerWidth - pw - 12;
+  if (py + ph > window.innerHeight - 12) py = y - ph - 16;
+  pop.style.left = `${Math.max(12, px)}px`;
+  pop.style.top = `${Math.max(12, py)}px`;
+}
+
+// pick the most specific (smallest) mark under the caret
+function markAt(pos) {
+  return currentMarks
+    .filter((m) => pos >= m.from && pos <= m.to)
+    .sort((a, b) => (a.to - a.from) - (b.to - b.from))[0];
+}
+
+input.addEventListener("click", (e) => {
+  const hit = markAt(input.selectionStart);
+  if (hit) openPop(hit, e.clientX, e.clientY);
+  else closePop();
+});
+
+document.addEventListener("mousedown", (e) => {
+  if (!pop.hidden && !pop.contains(e.target) && e.target !== input) closePop();
+});
+window.addEventListener("keydown", (e) => { if (e.key === "Escape") closePop(); });
 
 input.value = SAMPLE;
 run();

@@ -136,7 +136,7 @@ export function analyze(text, opts = {}) {
     sentences.push({ from: sent.from, to: sent.to, words: words.length, grade, level });
     if (level === MARK.HARD) counts.hard++;
     if (level === MARK.VERY_HARD) counts.veryHard++;
-    if (level) marks.push({ from: sent.from, to: sent.to, type: level });
+    if (level) marks.push({ from: sent.from, to: sent.to, type: level, words: words.length, grade });
 
     totalWords += words.length;
     totalLetters += letters;
@@ -212,6 +212,85 @@ export const LEGEND = [
   { type: MARK.QUALIFIER, label: "Qualifier",          color: "#c7b3e6" },
   { type: MARK.COMPLEX,   label: "Complex word",       color: "#d8b3e6" },
 ];
+
+// type -> { label, color } for quick lookup by the front ends.
+export const TYPE_META = Object.fromEntries(LEGEND.map((l) => [l.type, l]));
+
+const REMOVE_TOKENS = new Set(["omit", "remove", "delete"]);
+
+/**
+ * advise(mark) -> {
+ *   heading, color,
+ *   message,          // plain-language explanation of the issue
+ *   replacements,     // string[] the user can swap in (may be empty)
+ *   canRemove,        // whether "remove this" is a sensible fix
+ * }
+ * Mirrors what the Hemingway app shows when you click a highlight: an
+ * explanation plus, where we have them, concrete replacements.
+ */
+export function advise(mark) {
+  const meta = TYPE_META[mark.type] || { label: "Note", color: "#ccc" };
+  const base = { heading: meta.label, color: meta.color, replacements: [], canRemove: false };
+
+  switch (mark.type) {
+    case MARK.COMPLEX: {
+      const parts = (mark.suggestion || "").split(",").map((s) => s.trim()).filter(Boolean);
+      const replacements = parts.filter((p) => !REMOVE_TOKENS.has(p.toLowerCase()));
+      const canRemove = parts.some((p) => REMOVE_TOKENS.has(p.toLowerCase()));
+      return {
+        ...base,
+        message: replacements.length
+          ? "There is a simpler way to say this."
+          : "This word adds little. Consider cutting it.",
+        replacements,
+        canRemove,
+      };
+    }
+    case MARK.ADVERB:
+      return {
+        ...base,
+        message: "Adverbs often weaken a sentence. Cut it, or pick a stronger verb.",
+        canRemove: true,
+      };
+    case MARK.QUALIFIER:
+      return {
+        ...base,
+        message: "Qualifiers soften your point. Say it plainly without the hedge.",
+        canRemove: true,
+      };
+    case MARK.PASSIVE:
+      return {
+        ...base,
+        message: "Passive voice. Rewrite so the subject does the action (\"the team shipped it\", not \"it was shipped\").",
+      };
+    case MARK.HARD:
+      return {
+        ...base,
+        message: `Hard to read (grade ${mark.grade}, ${mark.words} words). Shorten it, or split it in two.`,
+      };
+    case MARK.VERY_HARD:
+      return {
+        ...base,
+        message: `Very hard to read (grade ${mark.grade}, ${mark.words} words). Break this into shorter sentences.`,
+      };
+    default:
+      return { ...base, message: "" };
+  }
+}
+
+// Apply a fix to text and return the new string + where the caret should land.
+// kind: "replace" (insert `value`) or "remove" (delete the range + one adjacent space).
+export function applyFix(text, mark, kind, value = "") {
+  let from = mark.from, to = mark.to;
+  if (kind === "remove") {
+    // eat one adjacent space so we don't leave a double space
+    if (text[to] === " ") to += 1;
+    else if (text[from - 1] === " ") from -= 1;
+    value = "";
+  }
+  const next = text.slice(0, from) + value + text.slice(to);
+  return { text: next, caret: from + value.length };
+}
 
 // Map an ARI grade to a friendly reading-level label.
 export function gradeLabel(grade) {
