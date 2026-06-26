@@ -1,5 +1,5 @@
 // Minimal assertions for the analyzer. Run: node core/plainsong.test.mjs
-import { analyze, MARK, gradeLabel } from "./plainsong.js";
+import { analyze, MARK, gradeLabel, advise, applyFix } from "./plainsong.js";
 
 let pass = 0, fail = 0;
 function ok(name, cond) {
@@ -78,6 +78,46 @@ function has(marks, type, snippet, text) {
   const t = "I think the document was reviewed quickly by the committee yesterday.";
   const { marks } = analyze(t);
   ok("all marks have valid offsets", marks.every((m) => m.from >= 0 && m.to <= t.length && m.from < m.to));
+}
+
+// 9. advise(): complex word offers replacements
+{
+  const t = "We will utilize it.";
+  const m = analyze(t).marks.find((x) => x.type === MARK.COMPLEX);
+  const a = advise(m);
+  ok("complex advice heading", a.heading.toLowerCase().includes("complex"));
+  ok("complex advice offers 'use'", a.replacements.includes("use"));
+}
+
+// 10. advise(): adverb is removable, no replacements
+{
+  const t = "She ran quickly.";
+  const m = analyze(t).marks.find((x) => x.type === MARK.ADVERB);
+  const a = advise(m);
+  ok("adverb advice canRemove", a.canRemove === true);
+  ok("adverb advice has a message", a.message.length > 0);
+}
+
+// 11. advise(): hard sentence reports grade + word count
+{
+  const t = "The comprehensive institutional framework necessitates substantial bureaucratic " +
+            "intervention because numerous organizational stakeholders demonstrate resistance toward initiatives.";
+  const m = analyze(t).marks.find((x) => x.type === MARK.HARD || x.type === MARK.VERY_HARD);
+  const a = advise(m);
+  ok("sentence advice mentions grade", /grade \d+/.test(a.message));
+}
+
+// 12. applyFix replace + remove
+{
+  const t = "We will utilize it.";
+  const m = analyze(t).marks.find((x) => x.type === MARK.COMPLEX);
+  const r = applyFix(t, m, "replace", "use");
+  ok("replace swaps the word", r.text === "We will use it.");
+
+  const t2 = "She ran quickly today.";
+  const m2 = analyze(t2).marks.find((x) => x.type === MARK.ADVERB);
+  const r2 = applyFix(t2, m2, "remove");
+  ok("remove deletes word + a space", r2.text === "She ran today.");
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
