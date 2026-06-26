@@ -67,20 +67,13 @@ export default class PlainsongPlugin extends Plugin {
     this.registerView(VIEW_TYPE, (leaf) => new PlainsongView(leaf, this));
     this.addSettingTab(new PlainsongSettingTab(this.app, this));
 
+    // The ribbon opens the panel, which holds the on/off toggle, the grade, and
+    // the counts. One discoverable entry point in the right sidebar.
+    this.addRibbonIcon(ICON_ID, "Open Plainsong panel", () => this.activatePanel());
     this.addCommand({ id: "open-panel", name: "Open readability panel", callback: () => this.activatePanel() });
     this.addCommand({
       id: "toggle-highlights", name: "Toggle highlights on/off",
-      callback: async () => {
-        this.settings.enabled = !this.settings.enabled;
-        await this.saveSettings();
-        new Notice(`Plainsong highlights ${this.settings.enabled ? "on" : "off"}`);
-      },
-    });
-    // A one-click ribbon toggle so it's always reachable.
-    this.addRibbonIcon(ICON_ID, "Toggle Plainsong highlights", async () => {
-      this.settings.enabled = !this.settings.enabled;
-      await this.saveSettings();
-      new Notice(`Plainsong highlights ${this.settings.enabled ? "on" : "off"}`);
+      callback: () => this.toggleHighlights(),
     });
 
     // Refresh the panel/status when the user switches notes.
@@ -193,6 +186,13 @@ export default class PlainsongPlugin extends Plugin {
     this.applyBodyClasses();
     this.refreshEditors();
   }
+
+  async toggleHighlights() {
+    this.settings.enabled = !this.settings.enabled;
+    await this.saveSettings();
+    this.panel?.render(this.lastStats);
+    new Notice(`Plainsong highlights ${this.settings.enabled ? "on" : "off"}`);
+  }
 }
 
 // Right-side readability panel.
@@ -208,6 +208,13 @@ class PlainsongView extends ItemView {
     const c = this.contentEl;
     c.empty();
     c.addClass("plainsong-panel");
+
+    const on = this.plugin.settings.enabled;
+    const toggle = c.createEl("button", {
+      cls: `ps-toggle ${on ? "is-on" : "is-off"}`,
+      text: on ? "Highlights on" : "Highlights off",
+    });
+    toggle.onclick = () => this.plugin.toggleHighlights();
 
     const grade = c.createDiv({ cls: "ps-grade" });
     grade.createDiv({ cls: "ps-grade-num", text: stats && stats.words ? String(stats.grade) : "—" });
