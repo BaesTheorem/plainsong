@@ -18,8 +18,8 @@ body.plainsong-hide-complex .plainsong-complex {
 }
 
 /* ---- underline style (default): sentences get a soft tint, words an underbar ---- */
-body.plainsong-on.plainsong-style-underline .plainsong-veryHard { background: rgba(243, 176, 176, 0.30); }
-body.plainsong-on.plainsong-style-underline .plainsong-hard     { background: rgba(243, 227, 168, 0.40); }
+body.plainsong-on.plainsong-style-underline .plainsong-veryHard { box-shadow: inset 0 -0.12em 0 rgba(216, 90, 90, 0.85); }
+body.plainsong-on.plainsong-style-underline .plainsong-hard     { box-shadow: inset 0 -0.12em 0 rgba(208, 170, 60, 0.9); }
 body.plainsong-on.plainsong-style-underline .plainsong-passive   { box-shadow: inset 0 -0.12em 0 var(--ps-passive, #5aa45a); }
 body.plainsong-on.plainsong-style-underline .plainsong-adverb    { box-shadow: inset 0 -0.12em 0 var(--ps-adverb, #3f86d8); }
 body.plainsong-on.plainsong-style-underline .plainsong-qualifier { box-shadow: inset 0 -0.12em 0 var(--ps-qualifier, #7b54c4); }
