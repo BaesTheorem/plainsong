@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Plainsong mark: lines of text, one passage highlighted. Flat, sharp, no shadow. -->
+  <rect width="1024" height="1024" fill="#1a1a1a"/>
+  <!-- hairline inset frame -->
+  <rect x="40.5" y="40.5" width="943" height="943" fill="none" stroke="#3a3a3a" stroke-width="3"/>
+
+  <!-- text bars; the middle line is the highlighted passage -->
+  <g fill="#f2f1ec">
+    <rect x="188" y="285" width="648" height="58"/>
+    <rect x="188" y="394" width="546" height="58"/>
+  </g>
+  <rect x="188" y="503" width="468" height="58" fill="#f3e3a8"/>
+  <g fill="#f2f1ec">
+    <rect x="188" y="612" width="608" height="58"/>
+    <rect x="188" y="721" width="430" height="58"/>
+  </g>
+</svg>

@@ -1,6 +1,6 @@
 import {
   Plugin, PluginSettingTab, Setting, ItemView, WorkspaceLeaf,
-  MarkdownView, debounce,
+  MarkdownView, debounce, addIcon,
 } from "obsidian";
 import { ViewPlugin, Decoration, DecorationSet, EditorView, ViewUpdate } from "@codemirror/view";
 import { Range } from "@codemirror/state";
@@ -9,6 +9,16 @@ import { syntaxTree } from "@codemirror/language";
 import { analyze, LEGEND, gradeLabel, MARK } from "../../core/plainsong.js";
 
 const VIEW_TYPE = "plainsong-panel";
+const ICON_ID = "plainsong";
+// Monochrome ribbon glyph: lines of text with one highlighted passage.
+const ICON_SVG =
+  '<g fill="currentColor">' +
+  '<rect x="14" y="18" width="64" height="8"/>' +
+  '<rect x="14" y="33" width="50" height="8"/>' +
+  '<rect x="14" y="47" width="46" height="13"/>' +
+  '<rect x="14" y="66" width="58" height="8"/>' +
+  '<rect x="14" y="81" width="40" height="8"/>' +
+  "</g>";
 const CATEGORIES = ["veryHard", "hard", "passive", "adverb", "qualifier", "complex"] as const;
 type Category = typeof CATEGORIES[number];
 
@@ -43,6 +53,7 @@ export default class PlainsongPlugin extends Plugin {
 
   async onload() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    addIcon(ICON_ID, ICON_SVG);
     this.applyBodyClasses();
 
     this.statusEl = this.addStatusBarItem();
@@ -52,7 +63,7 @@ export default class PlainsongPlugin extends Plugin {
     this.registerView(VIEW_TYPE, (leaf) => new PlainsongView(leaf, this));
     this.addSettingTab(new PlainsongSettingTab(this.app, this));
 
-    this.addRibbonIcon("pencil", "Plainsong panel", () => this.activatePanel());
+    this.addRibbonIcon(ICON_ID, "Plainsong panel", () => this.activatePanel());
     this.addCommand({ id: "open-panel", name: "Open readability panel", callback: () => this.activatePanel() });
     this.addCommand({
       id: "toggle-highlights", name: "Toggle highlights",
@@ -164,7 +175,7 @@ class PlainsongView extends ItemView {
   constructor(leaf: WorkspaceLeaf, private plugin: PlainsongPlugin) { super(leaf); }
   getViewType() { return VIEW_TYPE; }
   getDisplayText() { return "Plainsong"; }
-  getIcon() { return "pencil"; }
+  getIcon() { return ICON_ID; }
 
   async onOpen() { this.render(this.plugin.lastStats); }
 
