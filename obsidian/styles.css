@@ -1,0 +1,50 @@
+/* Plainsong — Obsidian editor highlights + panel.
+   All highlight visibility is gated on body.plainsong-on so toggling is instant. */
+
+.plainsong-mark { transition: none; }
+
+/* hidden unless the plugin is enabled */
+body:not(.plainsong-on) .plainsong-mark { background: none !important; box-shadow: none !important; }
+
+/* per-category hide switches */
+body.plainsong-hide-veryHard .plainsong-veryHard,
+body.plainsong-hide-hard .plainsong-hard,
+body.plainsong-hide-passive .plainsong-passive,
+body.plainsong-hide-adverb .plainsong-adverb,
+body.plainsong-hide-qualifier .plainsong-qualifier,
+body.plainsong-hide-complex .plainsong-complex {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* ---- underline style (default): sentences get a soft tint, words an underbar ---- */
+body.plainsong-on.plainsong-style-underline .plainsong-veryHard { background: rgba(243, 176, 176, 0.30); }
+body.plainsong-on.plainsong-style-underline .plainsong-hard     { background: rgba(243, 227, 168, 0.40); }
+body.plainsong-on.plainsong-style-underline .plainsong-passive   { box-shadow: inset 0 -0.12em 0 var(--ps-passive, #5aa45a); }
+body.plainsong-on.plainsong-style-underline .plainsong-adverb    { box-shadow: inset 0 -0.12em 0 var(--ps-adverb, #3f86d8); }
+body.plainsong-on.plainsong-style-underline .plainsong-qualifier { box-shadow: inset 0 -0.12em 0 var(--ps-qualifier, #7b54c4); }
+body.plainsong-on.plainsong-style-underline .plainsong-complex   { box-shadow: inset 0 -0.12em 0 var(--ps-complex, #b15fd0); }
+
+/* ---- background style (classic Hemingway look) ---- */
+body.plainsong-on.plainsong-style-background .plainsong-veryHard { background: rgba(243, 176, 176, 0.55); }
+body.plainsong-on.plainsong-style-background .plainsong-hard     { background: rgba(243, 227, 168, 0.65); }
+body.plainsong-on.plainsong-style-background .plainsong-passive   { background: rgba(169, 214, 169, 0.65); }
+body.plainsong-on.plainsong-style-background .plainsong-adverb    { background: rgba(111, 168, 230, 0.55); }
+body.plainsong-on.plainsong-style-background .plainsong-qualifier { background: rgba(155, 123, 212, 0.45); }
+body.plainsong-on.plainsong-style-background .plainsong-complex   { background: rgba(197, 143, 220, 0.45); }
+
+/* ---- panel ---- */
+.plainsong-panel { padding: 14px 16px; }
+.plainsong-panel .ps-grade { border-bottom: 1px solid var(--background-modifier-border); padding-bottom: 12px; margin-bottom: 14px; }
+.plainsong-panel .ps-grade-num { font-size: 40px; font-weight: 700; line-height: 1; }
+.plainsong-panel .ps-grade-label { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+.plainsong-panel .ps-readout { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.plainsong-panel .ps-row { display: flex; align-items: baseline; gap: 8px; }
+.plainsong-panel .ps-num { font-weight: 600; min-width: 44px; font-variant-numeric: tabular-nums; }
+.plainsong-panel .ps-lab { color: var(--text-muted); font-size: 12px; }
+.plainsong-panel .ps-legend { display: flex; flex-direction: column; }
+.plainsong-panel .ps-leg { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--background-modifier-border); font-size: 13px; }
+.plainsong-panel .ps-swatch { width: 13px; height: 13px; border: 1px solid rgba(0,0,0,0.15); flex: none; }
+.plainsong-panel .ps-name { flex: 1; }
+.plainsong-panel .ps-count { font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.plainsong-panel .ps-zero { opacity: 0.45; }

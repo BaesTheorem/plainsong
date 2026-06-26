@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Plainsong</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Plainsong</div>
+    <div class="tagline">write plainly</div>
+    <div class="spacer"></div>
+    <button id="sample" class="ghost">Load sample</button>
+    <button id="toggle" class="ghost" aria-pressed="true">Highlights: on</button>
+  </header>
+
+  <main class="layout">
+    <section class="editor-wrap">
+      <div id="backdrop" class="backdrop" aria-hidden="true"></div>
+      <textarea id="input" class="input" spellcheck="true"
+        placeholder="Start writing, or paste a draft. Plainsong shows you where it gets hard to read."></textarea>
+    </section>
+
+    <aside class="panel">
+      <div class="grade">
+        <div id="grade-num" class="grade-num">—</div>
+        <div id="grade-label" class="grade-label">Readability grade</div>
+      </div>
+
+      <div class="readout">
+        <div class="row"><span id="words">0</span><label>words</label></div>
+        <div class="row"><span id="sentences">0</span><label>sentences</label></div>
+        <div class="row"><span id="reading">0s</span><label>read time</label></div>
+      </div>
+
+      <ul id="legend" class="legend"></ul>
+
+      <p class="note">Sentence color is the Automated Readability Index. A sentence
+        must run 14+ words before it can be flagged. Passive voice now catches
+        irregular participles the original misses.</p>
+    </aside>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

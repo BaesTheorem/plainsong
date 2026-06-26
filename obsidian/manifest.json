@@ -1,0 +1,9 @@
+{
+  "id": "plainsong",
+  "name": "Plainsong",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "Hemingway-style readability highlighting: hard sentences, passive voice, adverbs, qualifiers, and complex words, live in the editor.",
+  "author": "Alex Hedtke",
+  "isDesktopOnly": false
+}

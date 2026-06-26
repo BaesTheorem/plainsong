@@ -1,0 +1,148 @@
+:root {
+  --ink: #1a1a1a;
+  --paper: #ffffff;
+  --muted: #6b6b6b;
+  --line: #e2e2e2;
+  --line-strong: #cfcfcf;
+
+  /* the five (six) accents */
+  --c-veryhard: #f3b0b0;
+  --c-hard:     #f3e3a8;
+  --c-passive:  #a9d6a9;
+  --c-adverb:   #6fa8e6;
+  --c-qualifier:#9b7bd4;
+  --c-complex:  #c58fdc;
+
+  --font: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  --ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+
+  --pad: 28px;
+  --fs: 19px;
+  --lh: 1.7;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--ui);
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.brand { font-weight: 700; letter-spacing: 0.02em; font-size: 17px; }
+.tagline { color: var(--muted); font-size: 13px; }
+.spacer { flex: 1; }
+.ghost {
+  font-family: var(--ui);
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.ghost:hover { background: #f6f6f6; }
+.ghost[aria-pressed="false"] { color: var(--muted); }
+
+.layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  min-height: 0;
+}
+
+.editor-wrap {
+  position: relative;
+  overflow: auto;
+  border-right: 1px solid var(--line);
+}
+
+/* backdrop and textarea must share identical metrics so glyphs line up */
+.backdrop, .input {
+  margin: 0;
+  border: 0;
+  padding: var(--pad);
+  width: 100%;
+  min-height: 100%;
+  font-family: var(--font);
+  font-size: var(--fs);
+  line-height: var(--lh);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  letter-spacing: normal;
+  tab-size: 4;
+}
+.backdrop {
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  pointer-events: none;
+  z-index: 1;
+}
+.input {
+  position: relative;
+  z-index: 2;
+  background: transparent;
+  color: var(--ink);
+  resize: none;
+  outline: none;
+  caret-color: var(--ink);
+  display: block;
+}
+
+/* highlight classes (applied to backdrop segments) */
+body.hl-off .seg { background: transparent !important; border-bottom: 0 !important; }
+.seg.hard      { background: var(--c-hard); }
+.seg.veryHard  { background: var(--c-veryhard); }
+.seg.passive   { box-shadow: inset 0 -2px 0 var(--c-passive); }
+.seg.adverb    { box-shadow: inset 0 -2px 0 var(--c-adverb); }
+.seg.qualifier { box-shadow: inset 0 -2px 0 var(--c-qualifier); }
+.seg.complex   { box-shadow: inset 0 -2px 0 var(--c-complex); }
+/* combine sentence bg with up to one word underline cleanly */
+.seg.passive.adverb { box-shadow: inset 0 -2px 0 var(--c-adverb); }
+
+.panel {
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  overflow: auto;
+}
+.grade { border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+.grade-num { font-size: 46px; font-weight: 700; line-height: 1; }
+.grade-label { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+.readout { display: flex; flex-direction: column; gap: 8px; }
+.readout .row { display: flex; align-items: baseline; gap: 8px; }
+.readout .row span { font-size: 18px; font-weight: 600; min-width: 46px; }
+.readout .row label { color: var(--muted); font-size: 13px; }
+
+.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.legend li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+.legend .swatch { width: 14px; height: 14px; border: 1px solid rgba(0,0,0,0.15); flex: none; }
+.legend .lname { flex: 1; }
+.legend .lcount { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--muted); }
+.legend li.zero { opacity: 0.45; }
+
+.note { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 0; }
+
+@media (max-width: 720px) {
+  .layout { grid-template-columns: 1fr; }
+  .panel { border-top: 1px solid var(--line); }
+}
