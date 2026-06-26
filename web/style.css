@@ -156,21 +156,21 @@ body.hl-off .seg { background: transparent !important; border-bottom: 0 !importa
 .ps-pop-head { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; }
 .ps-pop-dot { width: 11px; height: 11px; border: 1px solid rgba(0,0,0,0.2); flex: none; }
 .ps-pop-msg { font-size: 13px; line-height: 1.45; color: #333; margin-top: 8px; }
-.ps-pop-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-top: 12px; }
-.ps-pop-reps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.ps-pop-rep, .ps-pop-remove {
+.ps-pop-fixes { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.ps-pop-fix {
   font-family: var(--ui);
   font-size: 13px;
-  padding: 5px 10px;
+  line-height: 1.35;
+  padding: 6px 10px;
   border: 1px solid var(--line-strong);
   border-radius: 0;
   background: var(--paper);
   color: var(--ink);
   cursor: pointer;
+  text-align: left;
+  white-space: normal;
 }
-.ps-pop-rep:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.ps-pop-remove { margin-top: 10px; display: block; width: 100%; text-align: center; }
-.ps-pop-remove:hover { background: #f6f6f6; }
+.ps-pop-fix:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
 @media (max-width: 720px) {
   .layout { grid-template-columns: 1fr; }

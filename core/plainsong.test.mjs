@@ -1,5 +1,5 @@
 // Minimal assertions for the analyzer. Run: node core/plainsong.test.mjs
-import { analyze, MARK, gradeLabel, advise, applyFix } from "./plainsong.js";
+import { analyze, MARK, gradeLabel, advise, applyFix, applyEdit } from "./plainsong.js";
 
 let pass = 0, fail = 0;
 function ok(name, cond) {
@@ -80,39 +80,69 @@ function has(marks, type, snippet, text) {
   ok("all marks have valid offsets", marks.every((m) => m.from >= 0 && m.to <= t.length && m.from < m.to));
 }
 
-// 9. advise(): complex word offers replacements
+// 9. advise(): complex word offers a "Use X" fix
 {
   const t = "We will utilize it.";
   const m = analyze(t).marks.find((x) => x.type === MARK.COMPLEX);
-  const a = advise(m);
+  const a = advise(m, t);
   ok("complex advice heading", a.heading.toLowerCase().includes("complex"));
-  ok("complex advice offers 'use'", a.replacements.includes("use"));
+  ok("complex offers a 'Use \"use\"' fix", a.fixes.some((f) => f.insert === "use"));
 }
 
-// 10. advise(): adverb is removable, no replacements
+// 10. advise(): adverb gets a remove fix
 {
   const t = "She ran quickly.";
   const m = analyze(t).marks.find((x) => x.type === MARK.ADVERB);
-  const a = advise(m);
-  ok("adverb advice canRemove", a.canRemove === true);
-  ok("adverb advice has a message", a.message.length > 0);
+  const a = advise(m, t);
+  ok("adverb has a remove fix", a.fixes.some((f) => f.insert === "" && f.label === "Remove it"));
 }
 
-// 11. advise(): hard sentence reports grade + word count
+// 11. advise(): passive with named agent yields an active-voice rewrite
 {
-  const t = "The comprehensive institutional framework necessitates substantial bureaucratic " +
-            "intervention because numerous organizational stakeholders demonstrate resistance toward initiatives.";
-  const m = analyze(t).marks.find((x) => x.type === MARK.HARD || x.type === MARK.VERY_HARD);
-  const a = advise(m);
-  ok("sentence advice mentions grade", /grade \d+/.test(a.message));
+  const t = "The cake was baked by Maria.";
+  const m = analyze(t).marks.find((x) => x.type === MARK.PASSIVE);
+  const a = advise(m, t);
+  const fix = a.fixes.find((f) => /active/i.test(f.label));
+  ok("passive offers an active rewrite", !!fix);
+  const r = fix && applyEdit(t, fix.from, fix.to, fix.insert);
+  ok("active rewrite is correct", r && r.text === "Maria baked the cake.");
 }
 
-// 12. applyFix replace + remove
+// 11b. irregular participle conjugates back to simple past
+{
+  const t = "The novel was written by a recluse.";
+  const m = analyze(t).marks.find((x) => x.type === MARK.PASSIVE);
+  const fix = advise(m, t).fixes.find((f) => /active/i.test(f.label));
+  const r = fix && applyEdit(t, fix.from, fix.to, fix.insert);
+  ok("irregular passive rewrite", r && r.text === "A recluse wrote the novel.");
+}
+
+// 11c. agentless passive gives guidance, no rewrite fix
+{
+  const t = "Mistakes were made.";
+  const m = analyze(t).marks.find((x) => x.type === MARK.PASSIVE);
+  const a = advise(m, t);
+  ok("agentless passive has no rewrite fix", !a.fixes.some((f) => /active/i.test(f.label)));
+}
+
+// 11d. hard sentence proposes a split at a conjunction
+{
+  const t = "We shipped the feature on Friday, and the whole team celebrated the launch " +
+            "with a long dinner downtown afterward.";
+  const m = analyze(t).marks.find((x) => x.type === MARK.HARD || x.type === MARK.VERY_HARD);
+  const a = advise(m, t);
+  const fix = a.fixes.find((f) => /split/i.test(f.label));
+  ok("hard sentence offers a split", !!fix);
+  const r = fix && applyEdit(t, fix.from, fix.to, fix.insert);
+  ok("split produces two sentences", r && /Friday\. The whole team/.test(r.text));
+}
+
+// 12. applyEdit replaces a range
 {
   const t = "We will utilize it.";
   const m = analyze(t).marks.find((x) => x.type === MARK.COMPLEX);
-  const r = applyFix(t, m, "replace", "use");
-  ok("replace swaps the word", r.text === "We will use it.");
+  const r = applyEdit(t, m.from, m.to, "use");
+  ok("applyEdit swaps the word", r.text === "We will use it.");
 
   const t2 = "She ran quickly today.";
   const m2 = analyze(t2).marks.find((x) => x.type === MARK.ADVERB);

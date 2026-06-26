@@ -1,4 +1,4 @@
-import { analyze, LEGEND, gradeLabel, advise, applyFix } from "../core/plainsong.js";
+import { analyze, LEGEND, gradeLabel, advise, applyEdit } from "../core/plainsong.js";
 
 const input = document.getElementById("input");
 const backdrop = document.getElementById("backdrop");
@@ -119,8 +119,8 @@ document.body.appendChild(pop);
 
 function closePop() { pop.hidden = true; }
 
-function applyAndClose(mark, kind, value) {
-  const { text, caret } = applyFix(input.value, mark, kind, value);
+function applyFixAndClose(fix) {
+  const { text, caret } = applyEdit(input.value, fix.from, fix.to, fix.insert);
   input.value = text;
   run();
   closePop();
@@ -129,7 +129,7 @@ function applyAndClose(mark, kind, value) {
 }
 
 function openPop(mark, x, y) {
-  const a = advise(mark);
+  const a = advise(mark, input.value);
   pop.replaceChildren();
 
   const head = document.createElement("div");
@@ -147,29 +147,17 @@ function openPop(mark, x, y) {
   msg.textContent = a.message;
   pop.append(msg);
 
-  if (a.replacements.length) {
-    const label = document.createElement("div");
-    label.className = "ps-pop-label";
-    label.textContent = "Replace with";
-    pop.append(label);
-    const reps = document.createElement("div");
-    reps.className = "ps-pop-reps";
-    for (const r of a.replacements) {
+  if (a.fixes.length) {
+    const fixes = document.createElement("div");
+    fixes.className = "ps-pop-fixes";
+    for (const f of a.fixes) {
       const b = document.createElement("button");
-      b.className = "ps-pop-rep";
-      b.textContent = r;
-      b.onclick = () => applyAndClose(mark, "replace", r);
-      reps.append(b);
+      b.className = "ps-pop-fix";
+      b.textContent = f.label;
+      b.onclick = () => applyFixAndClose(f);
+      fixes.append(b);
     }
-    pop.append(reps);
-  }
-
-  if (a.canRemove) {
-    const b = document.createElement("button");
-    b.className = "ps-pop-remove";
-    b.textContent = "Remove it";
-    b.onclick = () => applyAndClose(mark, "remove");
-    pop.append(b);
+    pop.append(fixes);
   }
 
   pop.hidden = false;
