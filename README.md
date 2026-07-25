@@ -12,10 +12,10 @@ participles ("was written", "was taken") that the original silently misses.
 ## Layout
 
 ```
-core/      plainsong.js   — the analyzer: pure, DOM-free, zero-dependency
-           wordlists.js   — the curated lists (adverb whitelist, qualifiers, complex words)
-           plainsong.test.mjs — node test suite
-web/       a beautiful single-page editor (transparent textarea over a highlight backdrop)
+core/      plainsong.js         the analyzer: pure, DOM-free, zero-dependency
+           wordlists.js         the curated lists (adverb whitelist, qualifiers, complex words)
+           plainsong.test.mjs   node test suite
+web/       a single-page editor (transparent textarea over a highlight backdrop)
 obsidian/  the Obsidian plugin (CodeMirror 6 live decorations + side panel + status bar)
 ```
 
@@ -27,15 +27,15 @@ front end re-implements any analysis.
 
 `analyze(text)` returns `{ sentences, marks, stats }`:
 
-- `marks` — `[{ from, to, type, suggestion? }]`, character offsets into the text.
+- `marks`: `[{ from, to, type, suggestion? }]`, character offsets into the text.
   Types: `hard`, `veryHard` (sentences); `adverb`, `passive`, `qualifier`,
   `complex` (words/phrases).
-- `sentences` — per-sentence `{ from, to, words, grade, level }`.
-- `stats` — words, sentences, reading time, document grade, Flesch-Kincaid, and
+- `sentences`: per-sentence `{ from, to, words, grade, level }`.
+- `stats`: words, sentences, reading time, document grade, Flesch-Kincaid, and
   per-category counts.
 
 `advise(mark)` returns the click-to-fix payload: `{ heading, color, message,
-replacements, canRemove }` — the issue explained in plain language plus the
+replacements, canRemove }`, the issue explained in plain language plus the
 concrete fixes. `applyFix(text, mark, kind, value)` returns the edited string and
 new caret position. Both front ends use these so the suggestions are identical.
 
@@ -78,7 +78,7 @@ Live in-editor highlighting via CM6 decorations, a readability side panel
 ("Open readability panel" command), and a status-bar grade. Code blocks, inline
 code, and YAML frontmatter are skipped.
 
-Highlighting is **off by default** — it's a pass you opt into. Turn it on with
+Highlighting is **off by default**; it's a pass you opt into. Turn it on with
 the ribbon icon (pencil-lines glyph) or the "Toggle highlights on/off" command;
 the choice persists. When off, the plugin emits no decorations at all. The
 default sentence treatment is a colored underline; switch to "Background" in
